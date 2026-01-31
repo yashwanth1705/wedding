@@ -11,9 +11,33 @@ export default function IntroEnvelope({ onOpen }: Props) {
     const [isOpen, setIsOpen] = useState(false)
     const [isVisible, setIsVisible] = useState(true)
 
+    const playSound = (path: string) => {
+        if (typeof window !== 'undefined') {
+            const audio = new Audio(path)
+            audio.volume = 0.5
+            audio.play().catch(e => console.log('Audio play failed', e))
+        }
+    }
+
+    useEffect(() => {
+        // Play entrance sound after a brief delay
+        const timer = setTimeout(() => {
+            playSound('/sounds/whoosh.mp3')
+        }, 300)
+        return () => clearTimeout(timer)
+    }, [])
+
     const handleOpen = () => {
+        playSound('/sounds/open.mp3')
+        setTimeout(() => playSound('/sounds/whoosh.mp3'), 200) // Rocket sound
+
         setIsOpen(true)
-        onOpen()
+
+        // Trigger page reveal slightly earlier to coordinate with rocket
+        setTimeout(() => {
+            onOpen()
+        }, 500)
+
         // Allow main content to be interactive after animation
         setTimeout(() => {
             setIsVisible(false)
@@ -23,6 +47,7 @@ export default function IntroEnvelope({ onOpen }: Props) {
     }
 
     const [stars, setStars] = useState<any[]>([])
+    const [shootingStars, setShootingStars] = useState<any[]>([])
 
     useEffect(() => {
         // Generate stars only on client side to avoid hydration mismatch
@@ -37,6 +62,28 @@ export default function IntroEnvelope({ onOpen }: Props) {
             shouldTwinkle: Math.random() > 0.4, // Only 60% of stars will twinkle
         }))
         setStars(generatedStars)
+
+        // Generate shooting stars with random trajectories
+        const generatedShootingStars = [...Array(5)].map(() => {
+            const startX = Math.random() * 100 // 0-100% width
+            const startY = Math.random() * 100 // 0-100% height
+            // Decide direction: mostly diagonal down/across
+            const angle = Math.random() * 360
+            const velocity = Math.random() * 100 + 100 // distance
+
+            return {
+                top: `${startY}%`,
+                left: `${startX}%`,
+                width: `${Math.random() * 100 + 50}px`,
+                rotate: `${angle}deg`,
+                // Calculate end position based on angle
+                x: `${Math.cos(angle * Math.PI / 180) * 150}vw`,
+                y: `${Math.sin(angle * Math.PI / 180) * 150}vh`,
+                duration: Math.random() * 2 + 3, // 3-5s slow movement
+                delay: Math.random() * 5
+            }
+        })
+        setShootingStars(generatedShootingStars)
     }, [])
 
     useEffect(() => {
@@ -53,12 +100,11 @@ export default function IntroEnvelope({ onOpen }: Props) {
             {!isOpen && (
                 <motion.div
                     initial={{ opacity: 1 }}
-                    exit={{ opacity: 0, transition: { duration: 1 } }}
-                    className="fixed inset-0 z-[200] flex items-center justify-center bg-black"
+                    exit={{ opacity: 0, transition: { duration: 1.2, delay: 0.4 } }}
+                    className="fixed inset-0 z-[200] flex items-center justify-center bg-black overflow-hidden"
                 >
                     {/* Starry Night Background */}
                     <div className="absolute inset-0 z-0 overflow-hidden bg-[#050505]">
-                        {/* Generate Stars */}
                         {/* Generate Stars (Client-Side Only) */}
                         {stars.map((star, i) => (
                             <motion.div
@@ -83,6 +129,31 @@ export default function IntroEnvelope({ onOpen }: Props) {
                                 }}
                             />
                         ))}
+
+                        {/* Shooting Stars (Randomized) */}
+                        {shootingStars.map((star, i) => (
+                            <motion.div
+                                key={`shooting-${i}`}
+                                className="absolute h-[1px] bg-gradient-to-r from-transparent via-white to-transparent"
+                                style={{
+                                    width: star.width,
+                                    top: star.top,
+                                    left: star.left,
+                                    rotate: star.rotate,
+                                }}
+                                animate={{
+                                    x: star.x,
+                                    y: star.y,
+                                    opacity: [0, 1, 0]
+                                }}
+                                transition={{
+                                    duration: star.duration,
+                                    repeat: Infinity,
+                                    delay: star.delay,
+                                    ease: "linear"
+                                }}
+                            />
+                        ))}
                     </div>
 
                     {/* Add Twinkle Keyframes */}
@@ -94,14 +165,15 @@ export default function IntroEnvelope({ onOpen }: Props) {
                     </div>
 
                     <motion.div
-                        initial={{ scale: 0.9, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ duration: 0.8, ease: 'easeOut' }}
+                        initial={{ x: '-100vw', scale: 0.4, opacity: 0, rotate: -10 }}
+                        animate={{ x: 0, scale: 1, opacity: 1, rotate: 0 }}
+                        exit={{ x: '120vw', scale: 0.2, opacity: 0, rotate: 10, transition: { duration: 3.0, ease: "easeInOut" } }}
+                        transition={{ type: "spring", duration: 4.0, bounce: 0.2 }} // Much slower entrance
                         onClick={handleOpen}
                         className="relative cursor-pointer group"
                     >
                         {/* Envelope Container */}
-                        <div className="relative w-[300px] h-[200px] sm:w-[500px] sm:h-[320px] bg-[#1a1a1a] shadow-2xl transition-transform duration-500 group-hover:scale-[1.02] overflow-hidden rounded-xl border border-white/5">
+                        <div className="relative w-[300px] h-[200px] sm:w-[500px] sm:h-[320px] bg-black shadow-2xl transition-transform duration-500 group-hover:scale-[1.02] overflow-hidden rounded-xl border border-white/5">
 
                             {/* Comet Border Effect */}
                             <div className="absolute inset-0 z-0 opacity-50">
@@ -116,16 +188,16 @@ export default function IntroEnvelope({ onOpen }: Props) {
                             </div>
 
                             {/* Inner Border to create the "track" feel */}
-                            <div className="absolute inset-[1px] bg-[#1a1a1a] z-0 rounded-xl" />
+                            <div className="absolute inset-[1px] bg-black z-0 rounded-xl" />
 
                             {/* Envelope Flap - Lighter for contrast (catching light) */}
                             <div
-                                className="absolute top-0 left-0 w-full h-1/2 bg-[#222] border-b border-l border-r border-white/10 z-20 origin-top transition-transform duration-700 ease-in-out shadow-lg"
+                                className="absolute top-0 left-0 w-full h-1/2 bg-black border-b border-l border-r border-white/10 z-20 origin-top transition-transform duration-700 ease-in-out shadow-lg"
                                 style={{ clipPath: 'polygon(0 0, 50% 100%, 100% 0)' }}
                             />
 
                             {/* Envelope Body (Bottom) - Darker */}
-                            <div className="absolute bottom-0 left-0 w-full h-1/2 bg-[#151515] border-t border-white/5 z-10 rounded-b-xl">
+                            <div className="absolute bottom-0 left-0 w-full h-1/2 bg-black border-t border-white/5 z-10 rounded-b-xl">
                                 {/* Black Border accent inside */}
                                 <div className="absolute inset-2 border border-black/80 rounded-b-lg opacity-50" />
                             </div>

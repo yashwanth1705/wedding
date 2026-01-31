@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import { supabase } from '@/utils/supabase/client'
 
 interface FormErrors {
   name?: string
@@ -37,13 +38,40 @@ export default function RSVP() {
     if (errors[name as keyof FormErrors]) setErrors(prev => ({ ...prev, [name]: undefined }))
   }
 
+
+
+  // ...
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!validateForm()) return
     setIsLoading(true)
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    setIsLoading(false)
-    setSubmitted(true)
+
+    try {
+      const { error } = await supabase
+        .from('rsvps')
+        .insert([
+          {
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone,
+            guests: parseInt(formData.guests),
+            attending: formData.attending,
+            message: formData.message,
+          },
+        ])
+
+      if (error) {
+        throw error
+      }
+
+      setSubmitted(true)
+    } catch (error) {
+      console.error('Error submitting RSVP:', error)
+      alert('There was an error submitting your RSVP. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   if (submitted) {

@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react'
 
+import Image from 'next/image'
+
 export default function Hero() {
   const [scrollY, setScrollY] = useState(0)
 
@@ -14,10 +16,22 @@ export default function Hero() {
   }, [])
 
   return (
-    <section className="min-h-screen relative flex flex-col items-center justify-center overflow-hidden bg-black text-white px-4 py-16 sm:py-20">
+    <section className="min-h-screen relative flex flex-col items-center justify-center overflow-hidden bg-black text-white px-4 py-16 sm:pt-20 sm:pb-32">
 
       {/* Elegant Header Layout */}
       <div className="relative z-10 flex flex-col items-center justify-center text-center w-full max-w-4xl mx-auto">
+
+        {/* Header Image */}
+        <div className="mb-6 sm:mb-8 animate-fade-in">
+          <Image
+            src="/header-image.png"
+            alt="Header Decoration"
+            width={180}
+            height={180}
+            className="w-32 sm:w-40 h-auto opacity-90 mx-auto"
+            priority
+          />
+        </div>
 
         {/* Top Decorative Line */}
         <div className="w-16 sm:w-24 h-[1px] bg-white/50 mb-6 sm:mb-8 animate-scale-in" />
