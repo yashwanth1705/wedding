@@ -1,5 +1,7 @@
 'use client'
 
+import { useState } from 'react'
+import { motion } from 'framer-motion'
 import Cursor from '@/components/cursor'
 import FlowerFall from '@/components/snowfall'
 import Hero from '@/components/hero'
@@ -7,38 +9,49 @@ import OurStory from '@/components/our-story'
 import Venues from '@/components/venues'
 import Gallery from '@/components/gallery'
 import RSVP from '@/components/rsvp'
+import IntroEnvelope from '@/components/intro-envelope'
 
 export default function Home() {
+  const [isRevealed, setIsRevealed] = useState(false)
+
   return (
     <main className="bg-black min-h-screen relative selection:bg-white selection:text-black cursor-none">
+      <IntroEnvelope onOpen={() => setIsRevealed(true)} />
+
       {/* Custom cursor - hidden on touch devices */}
       <div className="hidden md:block">
         <Cursor />
       </div>
       <FlowerFall />
 
-      {/* 1. Hero Section */}
-      <Hero />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, filter: 'blur(10px)' }}
+        animate={isRevealed ? { opacity: 1, scale: 1, filter: 'blur(0px)' } : {}}
+        transition={{ duration: 1.5, ease: "easeOut", delay: 0.5 }} // Slight delay to let envelope start opening
+      >
+        {/* 1. Hero Section */}
+        <Hero />
 
-      {/* 2. Our Story Section */}
-      <OurStory />
+        {/* 2. Our Story Section */}
+        <OurStory />
 
-      {/* 3. Celebrations & Ceremonies Combined */}
-      <Venues />
+        {/* 3. Celebrations & Ceremonies Combined */}
+        <Venues />
 
-      {/* 4. Photo Gallery */}
-      <Gallery />
+        {/* 4. Photo Gallery */}
+        <Gallery />
 
-      {/* 5. RSVP Section */}
-      <section id="rsvp" className="py-12 sm:py-20 bg-neutral-900">
-        <RSVP />
-      </section>
+        {/* 5. RSVP Section */}
+        <section id="rsvp" className="py-12 sm:py-20 bg-neutral-900">
+          <RSVP />
+        </section>
 
-      {/* Footer */}
-      <footer className="py-8 sm:py-12 text-center text-xs sm:text-sm text-white/40 border-t border-white/10 bg-black px-4">
-        <p>Made with love for Yashwanth Rathnam S & Tamilselvam C</p>
-        <p className="mt-2 text-white/20">June 17, 2026 • Tenkasi</p>
-      </footer>
+        {/* Footer */}
+        <footer className="py-8 sm:py-12 text-center text-xs sm:text-sm text-white/40 border-t border-white/10 bg-black px-4">
+          <p>Made with love for Yashwanth Rathnam S & Tamilselvam C</p>
+          <p className="mt-2 text-white/20">June 17, 2026 • Tenkasi</p>
+        </footer>
+      </motion.div>
     </main>
   )
 }
